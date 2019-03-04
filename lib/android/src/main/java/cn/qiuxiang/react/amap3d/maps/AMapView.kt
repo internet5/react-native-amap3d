@@ -1,7 +1,9 @@
 package cn.qiuxiang.react.amap3d.maps
 
+import cn.qiuxiang.react.amap3d.R
 import android.content.Context
 import android.view.View
+import android.graphics.Point
 import cn.qiuxiang.react.amap3d.toLatLng
 import cn.qiuxiang.react.amap3d.toLatLngBounds
 import cn.qiuxiang.react.amap3d.toWritableMap
@@ -11,7 +13,9 @@ import com.amap.api.maps.TextureMapView
 import com.amap.api.maps.model.BitmapDescriptorFactory
 import com.amap.api.maps.model.CameraPosition
 import com.amap.api.maps.model.Marker
+import com.amap.api.maps.model.MarkerOptions
 import com.amap.api.maps.model.MyLocationStyle
+import com.amap.api.maps.model.LatLng
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
@@ -23,6 +27,7 @@ class AMapView(context: Context) : TextureMapView(context) {
     private val eventEmitter: RCTEventEmitter = (context as ThemedReactContext).getJSModule(RCTEventEmitter::class.java)
     private val markers = HashMap<String, AMapMarker>()
     private val lines = HashMap<String, AMapPolyline>()
+    private var centerPinEnabled = false
     private val locationStyle by lazy {
         val locationStyle = MyLocationStyle()
         locationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_LOCATION_ROTATE_NO_CENTER)
@@ -87,6 +92,18 @@ class AMapView(context: Context) : TextureMapView(context) {
             }
         })
 
+        map.setOnMapLoadedListener(object : AMap.OnMapLoadedListener {
+            override fun onMapLoaded() {
+                if(centerPinEnabled){
+                    val latLng = map.getCameraPosition().target
+                    val screenPosition = map.getProjection().toScreenLocation(latLng)
+                    val locationMarker = map.addMarker(MarkerOptions().anchor(0.5f,0.5f).icon(BitmapDescriptorFactory.fromResource(R.drawable.purple_pin)))
+                    locationMarker.setPositionByPixels(screenPosition.x,screenPosition.y)
+                    locationMarker.setZIndex(1f)
+                }
+            }
+        })
+        
         map.setOnInfoWindowClickListener { marker ->
             emit(markers[marker.id]?.id, "onInfoWindowPress")
         }
@@ -199,6 +216,10 @@ class AMapView(context: Context) : TextureMapView(context) {
         map.setMapStatusLimits(region.toLatLngBounds())
     }
 
+    fun setCenterPinEnabled(enabled: Boolean) {
+        centerPinEnabled = enabled
+    }
+    
     fun setLocationEnabled(enabled: Boolean) {
         map.isMyLocationEnabled = enabled
         map.myLocationStyle = locationStyle
