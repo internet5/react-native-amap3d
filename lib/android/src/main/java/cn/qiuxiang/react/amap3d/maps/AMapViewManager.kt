@@ -62,6 +62,11 @@ internal class AMapViewManager : ViewGroupManager<AMapView>() {
                 "onLocation", MapBuilder.of("registrationName", "onLocation")
         )
     }
+    
+    @ReactProp(name = "centerPinEnabled") 
+    fun setMyCenterPinEnabled(view: AMapView, enabled: Boolean) { 
+    view.setCenterPinEnabled(enabled) 
+    } 
 
     @ReactProp(name = "locationEnabled")
     fun setMyLocationEnabled(view: AMapView, enabled: Boolean) {
